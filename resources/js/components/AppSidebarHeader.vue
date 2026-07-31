@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import PortalSwitcher from '@/components/PortalSwitcher.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
 
@@ -10,6 +13,11 @@ withDefaults(
     {
         breadcrumbs: () => [],
     },
+);
+
+const page = usePage();
+const workflowEnabled = computed<boolean>(
+    () => page.props.workflow?.enabled ?? false,
 );
 </script>
 
@@ -22,6 +30,10 @@ withDefaults(
             <template v-if="breadcrumbs && breadcrumbs.length > 0">
                 <Breadcrumbs :breadcrumbs="breadcrumbs" />
             </template>
+        </div>
+
+        <div v-if="workflowEnabled" class="ml-auto flex items-center gap-2">
+            <PortalSwitcher />
         </div>
     </header>
 </template>
