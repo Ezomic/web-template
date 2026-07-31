@@ -1,15 +1,17 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
+    "name": "thijssensoftware/web-template",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "House Laravel + Inertia/Vue web application template.",
     "keywords": [
         "laravel",
-        "framework"
+        "inertia",
+        "vue",
+        "template"
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
@@ -69,13 +71,17 @@
             "@test"
         ],
         "types:check": [
-            "phpstan analyse"
+            "phpstan analyse --memory-limit=512M"
         ],
         "test": [
             "@php artisan config:clear --ansi",
             "@lint:check",
             "@types:check",
             "@php artisan test"
+        ],
+        "test:coverage": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --coverage --min=100"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -100,8 +106,7 @@
         "laravel": {
             "dont-discover": [],
             "installer": {
-                "post-create-project": [
-                ]
+                "post-create-project": []
             }
         }
     },
