@@ -18,7 +18,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            // Nullable because workflow mode provisions users from Thijssensoftware
+            // ID, which is passwordless and sends no password at all. NOT NULL here
+            // makes the very first SSO login fail on the insert.
+            $table->string('password')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
