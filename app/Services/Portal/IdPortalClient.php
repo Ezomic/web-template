@@ -16,7 +16,7 @@ use Throwable;
  * soft: any error yields an empty list so the switcher just shows nothing
  * rather than breaking the page.
  */
-class IdPortalClient
+final class IdPortalClient
 {
     private const TOKEN_CACHE_KEY = 'portal-client-token';
 
