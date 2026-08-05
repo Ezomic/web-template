@@ -24,9 +24,12 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   `app/` via `phpunit.xml`). New code ships with the tests that cover it. Coverage runs in CI
   (xdebug); Herd's local PHP has no coverage driver.
 - **Architecture tests** (`tests/Unit/ArchTest.php`) enforce the house conventions mechanically:
-  strict types everywhere, no `dd`/`dump`/`ray`, no Livewire/Filament, controllers final and
-  extending the base controller, `App\Actions` expose a `handle()` method, models extend Eloquent,
-  form requests extend the framework request.
+  strict types everywhere, no `dd`/`dump`/`ray`, no Livewire/Filament, controllers extending the
+  base controller, `App\Actions` expose a `handle()` method, models extend Eloquent, form requests
+  extend the framework request, enums backed and confined to `App\Enums`. **Controllers, actions,
+  services, policies and form requests must all be `final`** (models and providers are exempt:
+  Eloquent and the framework both extend them). If you need to vary behaviour, inject a
+  collaborator rather than subclassing.
 - `composer ci:check` runs the JS gate (ESLint, Prettier, `vue-tsc`), Pint, PHPStan and Pest.
   CI additionally runs `composer test:coverage`.
 
