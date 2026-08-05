@@ -46,3 +46,16 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
 
 - `composer dev` runs the server, Vite and logs together.
 - Tests: Pest with `RefreshDatabase` on in-memory SQLite (`php artisan test`).
+
+## Deploying
+
+`.github/workflows/deploy.yml` is `workflow_dispatch` only; production is deployed on purpose,
+never on push. It targets `/home/deploy/<repository name>`, so a clone needs no edit as long as
+the repo name matches the droplet directory. It needs three repo secrets: `DEPLOY_SSH_HOST`,
+`DEPLOY_SSH_USER`, `DEPLOY_SSH_KEY`.
+
+Two things in that script are load-bearing and commented as such: `optimize:clear` runs *before*
+`npm run build` (Wayfinder codegen reads the route list, and a stale route cache silently drops
+new routes), and there is deliberately **no** php-fpm reload (every site on the droplet shares one
+opcache, so reloading for one app evicts everyone else's bytecode). An app with a queue worker or
+Reverb adds its restart where the comment says.

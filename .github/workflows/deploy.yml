@@ -1,0 +1,66 @@
+name: Deploy to production
+
+# Manual deploys only. Production is deployed by hand over SSH; this workflow
+# is kept as a workflow_dispatch escape hatch and never triggers automatically.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # APP_DIR is the repository name, which is the app slug by convention,
+          # so a fresh clone deploys without editing this file. Override it here
+          # only if the droplet path genuinely differs from the repo name.
+          envs: APP_DIR
+          script: |
+            set -e
+            cd "/home/deploy/${APP_DIR}"
+            php artisan down --retry=15
+            git fetch origin
+            git reset --hard origin/main
+            composer install --no-dev --optimize-autoloader --no-interaction
+            # Clear the previous deploy's caches before building. Wayfinder codegen
+            # (npm run build) introspects routes, so stale cached routes would omit
+            # any newly added route/controller and break the frontend build.
+            php artisan optimize:clear
+            npm ci
+            npm run build
+            php artisan migrate --force
+            chmod 664 database/database.sqlite database/database.sqlite-wal database/database.sqlite-shm 2>/dev/null || true
+            chgrp www-data database/database.sqlite database/database.sqlite-wal database/database.sqlite-shm 2>/dev/null || true
+            # setgid on database/: the scheduler runs as deploy, not www-data, so a
+            # WAL/SHM file it recreates would land group=deploy and be unwritable by
+            # PHP-FPM (www-data).
+            chmod g+s database
+            # Rebuild config/route/view cache from the new code. Without this the
+            # cleared caches stay cleared and every request pays for it.
+            php artisan optimize
+            # No `systemctl reload php8.4-fpm` here on purpose. All sites on the
+            # droplet share one php-fpm master and therefore one opcache, so a reload
+            # to deploy this app would discard ~350MB of cached bytecode belonging to
+            # every other app and force them all to recompile. opcache.validate_timestamps
+            # is on, so the new code is picked up on the next request without it.
+            # See INFRA-28. If that setting is ever turned off, this must come back.
+            #
+            # An app with a persistent daemon restarts it here, after `optimize` and
+            # before `up`, because a long-running worker holds the old code in memory:
+            #   sudo systemctl restart <slug>-queue || true
+            #   sudo /usr/bin/supervisorctl restart <slug>-reverb:*
+            php artisan up
+        env:
+          APP_DIR: ${{ github.event.repository.name }}
