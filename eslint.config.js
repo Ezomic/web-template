@@ -77,9 +77,11 @@ export default defineConfigWithVueTs(
             'vendor',
             'node_modules',
             'public',
-            'bootstrap/ssr',
             'tailwind.config.js',
+            // Build/tooling configs sit outside tsconfig's `include`, so the
+            // typed parser cannot resolve them.
             'vite.config.ts',
+            'vitest.config.ts',
             'resources/js/actions/**',
             'resources/js/components/ui/*',
             'resources/js/routes/**',

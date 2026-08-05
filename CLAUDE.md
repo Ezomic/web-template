@@ -30,8 +30,12 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   services, policies and form requests must all be `final`** (models and providers are exempt:
   Eloquent and the framework both extend them). If you need to vary behaviour, inject a
   collaborator rather than subclassing.
-- `composer ci:check` runs the JS gate (ESLint, Prettier, `vue-tsc`), Pint, PHPStan and Pest.
-  CI additionally runs `composer test:coverage`.
+- `composer ci:check` runs the JS gate (ESLint, Prettier, `vue-tsc`, Vitest), Pint, PHPStan and
+  Pest. CI additionally runs `composer test:coverage`.
+- **Vitest** (`npm run test:js`) covers composables and components. Specs live in
+  `__tests__/` next to what they test and are named `*.test.ts`; `vitest.config.ts` runs jsdom
+  everywhere so a component spec never has to remember an annotation. Note the 100% coverage gate
+  is PHP-only, so the frontend is gated on tests passing, not on lines covered.
 
 ## Must know before editing
 
