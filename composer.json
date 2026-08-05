@@ -18,6 +18,7 @@
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
+        "thijssensoftware/flare-client": "^0.1.0",
         "thijssensoftware/id-client": "^0.1.0"
     },
     "require-dev": {
@@ -125,6 +126,14 @@
         {
             "type": "vcs",
             "url": "https://github.com/Ezomic/id-client.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/Ezomic/request-id.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/Ezomic/flare-client.git"
         }
     ],
     "minimum-stability": "stable",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5ad24adb2bb5c8c37d8f21fee8a5951a",
+    "content-hash": "44a2f0702c2db9bab2729edd6b56299b",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -7504,6 +7504,69 @@
             "time": "2026-06-09T10:54:51+00:00"
         },
         {
+            "name": "thijssensoftware/flare-client",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Ezomic/flare-client.git",
+                "reference": "7984940a9d13db81e77b37dc67d41fa3e2d5d653"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Ezomic/flare-client/zipball/7984940a9d13db81e77b37dc67d41fa3e2d5d653",
+                "reference": "7984940a9d13db81e77b37dc67d41fa3e2d5d653",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^11.0|^12.0|^13.0",
+                "illuminate/http": "^11.0|^12.0|^13.0",
+                "illuminate/queue": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.3",
+                "thijssensoftware/request-id": "^0.1.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "pestphp/pest": "^3.0|^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Thijssensoftware\\FlareClient\\FlareClientServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Thijssensoftware\\FlareClient\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Thijssensoftware\\FlareClient\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "pest"
+                ],
+                "lint": [
+                    "pint"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Reports exceptions, failed jobs and failed scheduled tasks to flare.",
+            "support": {
+                "source": "https://github.com/Ezomic/flare-client/tree/0.1.0",
+                "issues": "https://github.com/Ezomic/flare-client/issues"
+            },
+            "time": "2026-08-01T21:01:48+00:00"
+        },
+        {
             "name": "thijssensoftware/id-client",
             "version": "0.1.0",
             "source": {
@@ -7547,6 +7610,68 @@
                 "issues": "https://github.com/Ezomic/id-client/issues"
             },
             "time": "2026-07-10T00:58:22+00:00"
+        },
+        {
+            "name": "thijssensoftware/request-id",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Ezomic/request-id.git",
+                "reference": "7220761b0cd9c0ccee9e29e82355dfe0deade1bb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Ezomic/request-id/zipball/7220761b0cd9c0ccee9e29e82355dfe0deade1bb",
+                "reference": "7220761b0cd9c0ccee9e29e82355dfe0deade1bb",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^11.0|^12.0|^13.0",
+                "illuminate/http": "^11.0|^12.0|^13.0",
+                "illuminate/queue": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.0",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "pestphp/pest": "^3.0|^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Thijssensoftware\\RequestId\\RequestIdServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Thijssensoftware\\RequestId\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Thijssensoftware\\RequestId\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "pest"
+                ],
+                "lint": [
+                    "pint"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Stamps a correlation id on every request, queued job and console command, and forwards it to trusted hosts.",
+            "support": {
+                "source": "https://github.com/Ezomic/request-id/tree/0.1.0",
+                "issues": "https://github.com/Ezomic/request-id/issues"
+            },
+            "time": "2026-08-01T21:01:13+00:00"
         },
         {
             "name": "tijsverkoyen/css-to-inline-styles",
@@ -11559,7 +11684,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3"
+        "php": "^8.4"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"
