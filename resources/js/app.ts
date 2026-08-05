@@ -11,7 +11,10 @@ createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
+            // Error renders standalone: it has to survive an unauthenticated
+            // 404, where AppLayout's sidebar and user menu have no user.
             case name === 'Welcome':
+            case name === 'Error':
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
