@@ -13,15 +13,18 @@ return [
     | to pre-render each initial request made to your application's pages
     | so that server rendered HTML is delivered for the user's browser.
     |
+    | Off on purpose: SSR needs a persistent node process per app, and the
+    | shared droplet already runs ~21 sites in 2GB. An app that genuinely
+    | needs it adds resources/js/ssr.ts, an ssr input in vite.config.ts and
+    | a supervisor entry, then flips this back on.
+    |
     | See: https://inertiajs.com/server-side-rendering
     |
     */
 
     'ssr' => [
-        'enabled' => true,
+        'enabled' => false,
         'url' => 'http://127.0.0.1:13714',
-        // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
-
     ],
 
     /*
