@@ -32,6 +32,11 @@
         <!-- Pinned so the suite does not depend on the developer's .env. Tests
              that exercise workflow mode set config('workflow.enabled') explicitly. -->
         <env name="WORKFLOW_MODE" value="false"/>
+        <!-- Pinned off so the suite can never post to flare, whatever the
+             developer's .env says. Tests that exercise reporting enable it
+             explicitly and fake the HTTP client. -->
+        <env name="FLARE_ENABLED" value="false"/>
+        <env name="FLARE_KEY" value=""/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

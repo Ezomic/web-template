@@ -48,6 +48,16 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   `abort_unless($user instanceof User, 403)` before use (see the settings controllers).
 - **Health check:** `GET /health` returns `{ status, app, version, database }` for the `status`
   monitor (200 healthy, 503 when the DB is unreachable). Laravel's built-in `/up` is also present.
+- **Error reporting ships off.** `thijssensoftware/flare-client` and `thijssensoftware/request-id`
+  are installed and self-register, but `FLARE_ENABLED=false` by default: a fresh clone has no
+  project in flare and no key, so enabling it would just fire at the ingest endpoint for nothing.
+  To turn it on for a real app: register the app in flare, put its key in `FLARE_KEY`, set
+  `FLARE_ENABLED=true`, then confirm with `php artisan flare:test`. Exceptions, failed jobs, failed
+  scheduled tasks and non-zero command exits all report with no code in the app.
+- **`X-Request-Id` works whether or not flare is on.** request-id stamps every request, job and
+  command and echoes the header back, which is how a snag report is traced to the exception behind
+  it. Only a ULID or UUID is adopted from an incoming header; anything else is replaced, because an
+  arbitrary client string would land in log files, alert mail and the flare UI.
 
 ## Local dev
 
