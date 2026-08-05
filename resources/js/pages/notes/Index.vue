@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Pencil, Plus, Trash2 } from '@lucide/vue';
+import Paginator from '@/components/Paginator.vue';
 import { Button } from '@/components/ui/button';
 import { create, destroy, edit, index } from '@/routes/notes';
-import type { Note } from '@/types';
+import type { Note, Paginated } from '@/types';
 
 defineProps<{
-    notes: Note[];
+    notes: Paginated<Note>;
 }>();
 
 defineOptions({
@@ -35,7 +36,7 @@ function remove(note: Note): void {
         </div>
 
         <p
-            v-if="notes.length === 0"
+            v-if="notes.data.length === 0"
             class="rounded-xl border border-dashed border-sidebar-border/70 p-8 text-center text-sm text-muted-foreground"
         >
             No notes yet. Create your first one.
@@ -43,7 +44,7 @@ function remove(note: Note): void {
 
         <ul v-else class="flex flex-col gap-2">
             <li
-                v-for="note in notes"
+                v-for="note in notes.data"
                 :key="note.id"
                 class="flex items-start justify-between gap-4 rounded-xl border border-sidebar-border/70 p-4"
             >
@@ -70,5 +71,7 @@ function remove(note: Note): void {
                 </div>
             </li>
         </ul>
+
+        <Paginator :meta="notes" />
     </div>
 </template>

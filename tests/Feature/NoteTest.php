@@ -21,8 +21,57 @@ it('lists only the current user’s notes', function () {
     actingAs($user)->get('/notes')
         ->assertInertia(fn ($page) => $page
             ->component('notes/Index')
-            ->has('notes', 1)
-            ->where('notes.0.id', $mine->id));
+            ->has('notes.data', 1)
+            ->where('notes.data.0.id', $mine->id));
+});
+
+it('paginates the list at the configured page size', function () {
+    config()->set('pagination.per_page', 5);
+
+    $user = User::factory()->create();
+    Note::factory()->count(12)->for($user)->create();
+
+    actingAs($user)->get('/notes')
+        ->assertInertia(fn ($page) => $page
+            ->has('notes.data', 5)
+            ->where('notes.total', 12)
+            ->where('notes.last_page', 3)
+            ->where('notes.current_page', 1));
+});
+
+it('serves the requested page', function () {
+    config()->set('pagination.per_page', 5);
+
+    $user = User::factory()->create();
+    Note::factory()->count(12)->for($user)->create();
+
+    actingAs($user)->get('/notes?page=3')
+        ->assertInertia(fn ($page) => $page
+            ->has('notes.data', 2)
+            ->where('notes.current_page', 3));
+});
+
+// withQueryString(), so a filter or sort on the page is not silently dropped
+// the moment someone clicks page 2.
+it('keeps the rest of the query string on the paginator links', function () {
+    config()->set('pagination.per_page', 5);
+
+    $user = User::factory()->create();
+    Note::factory()->count(8)->for($user)->create();
+
+    actingAs($user)->get('/notes?sort=title')
+        ->assertInertia(fn ($page) => $page
+            ->where('notes.next_page_url', fn (string $url) => str_contains($url, 'sort=title')));
+});
+
+it('reports a single page when there is little to show', function () {
+    $user = User::factory()->create();
+    Note::factory()->count(2)->for($user)->create();
+
+    actingAs($user)->get('/notes')
+        ->assertInertia(fn ($page) => $page
+            ->where('notes.last_page', 1)
+            ->where('notes.total', 2));
 });
 
 it('renders the create page', function () {

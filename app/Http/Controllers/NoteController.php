@@ -13,6 +13,7 @@ use App\Models\Note;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,7 +25,10 @@ final class NoteController extends Controller
         abort_unless($user instanceof User, 403);
 
         return Inertia::render('notes/Index', [
-            'notes' => $user->notes()->latest()->get(),
+            'notes' => $user->notes()
+                ->latest()
+                ->paginate(Config::integer('pagination.per_page'))
+                ->withQueryString(),
         ]);
     }
 
