@@ -10,6 +10,11 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
 it('shares workflow disabled and no portal apps in base mode', function () {
+    // Set rather than assumed. This asserted false without ever setting it, so
+    // it only passed because the ambient config happened to say so, and it
+    // failed on the first clone that turned workflow mode on.
+    config(['workflow.enabled' => false]);
+
     get('/')->assertInertia(fn (Assert $page) => $page
         ->where('workflow.enabled', false)
         ->where('portalApps', []));
