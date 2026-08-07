@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Settings\ApiTokenController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -27,6 +28,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::get('settings/appearance', fn () => Inertia::render('settings/Appearance'))->name('appearance.edit');
+
+    // Behind RequirePassword like the security page: a personal access token is
+    // a full-access credential, so minting one from a hijacked session should
+    // still cost the password.
+    Route::middleware(RequirePassword::class)->group(function () {
+        Route::get('settings/api-tokens', [ApiTokenController::class, 'index'])->name('api-tokens.index');
+        Route::post('settings/api-tokens', [ApiTokenController::class, 'store'])->name('api-tokens.store');
+        Route::delete('settings/api-tokens/{token}', [ApiTokenController::class, 'destroy'])
+            ->whereNumber('token')
+            ->name('api-tokens.destroy');
+    });
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

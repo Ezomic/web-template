@@ -48,6 +48,12 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   `abort_unless($user instanceof User, 403)` before use (see the settings controllers).
 - **Health check:** `GET /health` returns `{ status, app, version, database }` for the `status`
   monitor (200 healthy, 503 when the DB is unreachable). Laravel's built-in `/up` is also present.
+- **API tokens:** Sanctum personal access tokens, managed at `settings/api-tokens` (list, create
+  with a one-time reveal, revoke). The pages sit behind `RequirePassword`, since a token is a
+  full-access credential. `routes/api.php` ships exactly one route, `GET /api/user` behind
+  `auth:sanctum`, so the tokens authenticate against something real; an app builds its API out
+  from there. When testing the API, do **not** `actingAs()` first: `auth:sanctum` falls back to
+  the web guard, so a lingering session authenticates the request and the token is never exercised.
 - **Error reporting ships off.** `thijssensoftware/flare-client` and `thijssensoftware/request-id`
   are installed and self-register, but `FLARE_ENABLED=false` by default: a fresh clone has no
   project in flare and no key, so enabling it would just fire at the ingest endpoint for nothing.
