@@ -73,12 +73,17 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
 ## Deploying
 
 `.github/workflows/deploy.yml` is `workflow_dispatch` only; production is deployed on purpose,
-never on push. It targets `/home/deploy/<repository name>`, so a clone needs no edit as long as
-the repo name matches the droplet directory. It needs three repo secrets: `DEPLOY_SSH_HOST`,
-`DEPLOY_SSH_USER`, `DEPLOY_SSH_KEY`.
+never on push. The workflow itself does nothing but SSH in: the deploy runs on the server as
+`app-deploy`, which the CI key is pinned to, so a leaked secret can redeploy this app's `main`
+and nothing else. It needs four repo secrets: `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`,
+`DEPLOY_SSH_KEY` and `DEPLOY_SSH_KNOWN_HOSTS`.
 
-Two things in that script are load-bearing and commented as such: `optimize:clear` runs *before*
-`npm run build` (Wayfinder codegen reads the route list, and a stale route cache silently drops
-new routes), and there is deliberately **no** php-fpm reload (every site on the droplet shares one
-opcache, so reloading for one app evicts everyone else's bytecode). An app with a queue worker or
-Reverb adds its restart where the comment says.
+`app-deploy` builds the release next to the live one (composer, npm, migrations, caches) and
+switches a symlink, so there is no maintenance window and no `artisan down`. If `/up` fails
+afterwards it switches back by itself. Migrations are not reverted, so keep them backwards
+compatible with the release before.
+
+**The app has to exist in the infra playbook first.** One entry in
+`~/Projects/infra/ansible/group_vars/all/apps.yml` creates its Linux user, php-fpm master,
+vhost, workers, scheduler and CI key; without it there is nothing to deploy to. Workers and
+php-fpm are restarted by `app-deploy`, not by anything in this repo.
