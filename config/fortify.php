@@ -163,9 +163,14 @@ return [
     */
 
     'features' => array_values(array_filter([
-        // Local registration is disabled in workflow mode; ID provisions users.
+        // Local credential features are disabled in workflow mode; ID owns the
+        // identity. Password reset in particular is not merely unused there: a
+        // user provisioned by id-client has a null password, and a reset link
+        // would let them mint one and sign in locally from then on. That
+        // session is established without ID, so it outlives revoking their
+        // application grant and ignores back-channel logout. See WEB-23.
         env('WORKFLOW_MODE', false) ? null : Features::registration(),
-        Features::resetPasswords(),
+        env('WORKFLOW_MODE', false) ? null : Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([
             'confirm' => true,
