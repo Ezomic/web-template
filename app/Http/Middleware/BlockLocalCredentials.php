@@ -42,12 +42,8 @@ final class BlockLocalCredentials
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $name = $request->route() instanceof Route
-            ? $request->route()->getName()
-            : null;
-
         abort_if(
-            (bool) config('workflow.enabled') && in_array($name, self::BLOCKED, true),
+            (bool) config('workflow.enabled') && $request->routeIs(...self::BLOCKED),
             Response::HTTP_NOT_FOUND,
         );
 
