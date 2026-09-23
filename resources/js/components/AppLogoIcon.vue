@@ -12,10 +12,19 @@ type Props = {
 defineProps<Props>();
 </script>
 
+<!--
+    A placeholder mark, on purpose. It used to be Laravel's logo, which is how
+    three apps ended up serving their own favicon in the browser tab while the
+    sidebar still showed Laravel's.
+
+    Replace the paths below with the app's own mark, drawn from the same shape as
+    its favicon so the tab and the sidebar agree. Every caller passes
+    `fill-current`, so it must be a filled mark rather than a stroked one.
+-->
 <template>
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 40 42"
+        viewBox="0 0 24 24"
         :class="className"
         v-bind="$attrs"
     >
@@ -23,7 +32,8 @@ defineProps<Props>();
             fill="currentColor"
             fill-rule="evenodd"
             clip-rule="evenodd"
-            d="M17.2 5.633 8.6.855 0 5.633v26.51l16.2 9 16.2-9v-8.442l7.6-4.223V9.856l-8.6-4.777-8.6 4.777V18.3l-5.6 3.111V5.633ZM38 18.301l-5.6 3.11v-6.157l5.6-3.11V18.3Zm-1.06-7.856-5.54 3.078-5.54-3.079 5.54-3.078 5.54 3.079ZM24.8 18.3v-6.157l5.6 3.111v6.158L24.8 18.3Zm-1 1.732 5.54 3.078-13.14 7.302-5.54-3.078 13.14-7.3v-.002Zm-16.2 7.89 7.6 4.222V38.3L2 30.966V7.92l5.6 3.111v16.892ZM8.6 9.3 3.06 6.222 8.6 3.143l5.54 3.08L8.6 9.3Zm21.8 15.51-13.2 7.334V38.3l13.2-7.334v-6.156ZM9.6 11.034l5.6-3.11v14.6l-5.6 3.11v-14.6Z"
+            d="M6 2h12a4 4 0 0 1 4 4v12a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4Zm0 2.5A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h12a1.5 1.5 0 0 0 1.5-1.5V6A1.5 1.5 0 0 0 18 4.5H6Z"
         />
+        <path fill="currentColor" d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" />
     </svg>
 </template>

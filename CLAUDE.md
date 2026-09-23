@@ -65,6 +65,38 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   it. Only a ULID or UUID is adopted from an incoming header; anything else is replaced, because an
   arbitrary client string would land in log files, alert mail and the flare UI.
 
+## Giving a new app its own identity
+
+A clone starts deliberately colourless: the stock shadcn neutral base, and a placeholder mark in
+`AppLogoIcon.vue`. Both are meant to be replaced in the app's first week, not shipped. Four apps
+ran for months on the defaults and ended up indistinguishable from each other, which is the
+failure this section exists to prevent.
+
+1. **Take the accent from Thijssensoftware ID.** Each app's colour lives once in ID's application
+   catalog (`accent`, `#RRGGBB`), which is what paints its tile in the portal switcher. Reading it
+   from there is what keeps the tile, the favicon and the app itself from disagreeing. A new app
+   picks a colour nothing else in the catalog uses, and one that sits **outside its own semantic
+   ramp**: an error tracker whose brand is the same orange as its "critical" chip makes every
+   screen ambiguous.
+2. **Generate the tokens.**
+
+   ```bash
+   php bin/palette.php "#0E7490"
+   ```
+
+   It prints the `:root` and `.dark` blocks for `resources/css/app.css`; paste them over the two
+   that are there. Every variable keeps its shadcn name, so the component library follows without
+   a component changing. The script also reports the primary's contrast against its own
+   foreground and says so when it fails AA.
+3. **Replace the mark.** `AppLogoIcon.vue` is a placeholder frame. Draw the app's own mark from
+   the same shape as its favicon. Every caller passes `fill-current`, so it must be filled rather
+   than stroked.
+4. **Match the rest.** `resources/views/app.blade.php` hardcodes the anti-flash background as an
+   `oklch()` literal in an inline style; it has to move with `--background`, or every page load
+   flashes the wrong colour before the stylesheet lands. Add a `theme-color` meta with the accent
+   while you are there. `AppSidebar.vue`'s `footerNavItems` point at this template's repo and
+   should point at the app's own.
+
 ## Local dev
 
 - `composer dev` runs the server, Vite and logs together.
