@@ -54,12 +54,28 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   `auth:sanctum`, so the tokens authenticate against something real; an app builds its API out
   from there. When testing the API, do **not** `actingAs()` first: `auth:sanctum` falls back to
   the web guard, so a lingering session authenticates the request and the token is never exercised.
-- **Error reporting ships off.** `thijssensoftware/flare-client` and `thijssensoftware/request-id`
-  are installed and self-register, but `FLARE_ENABLED=false` by default: a fresh clone has no
-  project in flare and no key, so enabling it would just fire at the ingest endpoint for nothing.
-  To turn it on for a real app: register the app in flare, put its key in `FLARE_KEY`, set
-  `FLARE_ENABLED=true`, then confirm with `php artisan flare:test`. Exceptions, failed jobs, failed
-  scheduled tasks and non-zero command exits all report with no code in the app.
+- **Reporting ships off, and there are two of them.** `thijssensoftware/flare-client` catches what
+  the runtime noticed; `thijssensoftware/snag-client` lets a person report what it did not, from
+  inside the page. Both self-register and both default to off, because a fresh clone has no project
+  in flare, no application in snag, and no keys, so enabling them would fire at two ingest endpoints
+  for nothing.
+
+  To turn flare on: register the app (`flare:project "Name" --tracker=KEY` on the flare box), put
+  its key in `FLARE_KEY`, set `FLARE_ENABLED=true`, confirm with `php artisan flare:test`.
+  Exceptions, failed jobs, failed scheduled tasks and non-zero command exits then report with no
+  code in the app.
+
+  To turn snag on: register the application in snag, then set `SNAG_ENABLED=true`, `SNAG_URL`,
+  `SNAG_KEY`, `SNAG_SECRET` and `SNAG_PSEUDONYM_SALT`. The last two are two secrets deliberately:
+  snag holds the ingest secret and must never hold the salt, which is what keeps a reporter's
+  pseudonym from being reversible by snag itself.
+
+  **Constraints on the house packages are `^0.3`, not `^0.1`, and that matters.** Composer's caret
+  is restrictive to the minor on a 0.x version, so `^0.1.0` resolves to `>=0.1.0 <0.2.0` and can
+  never upgrade. This template pinned flare-client and id-client that way, and six apps sat on
+  id-client 0.1.0 with back-channel single logout broken as a direct result (WEB-26, ATLAS-20).
+  When these packages reach 1.0 the constraint can relax; until then, widen it deliberately.
+
 - **`X-Request-Id` works whether or not flare is on.** request-id stamps every request, job and
   command and echoes the header back, which is how a snag report is traced to the exception behind
   it. Only a ULID or UUID is adopted from an incoming header; anything else is replaced, because an
