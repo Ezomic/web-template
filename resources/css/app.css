@@ -89,6 +89,20 @@
     }
 }
 
+/*
+    The stock shadcn neutral base: pure white, near-black, and a greyscale --primary.
+    It is deliberately colourless, because an identity the template picked would be an
+    identity every app inherited.
+
+    An app that ships these values looks like every other app. Give it its own:
+
+        php bin/palette.php "#RRGGBB"
+
+    and paste both blocks over the two below. The accent is the app's colour in
+    Thijssensoftware ID's application catalog, recorded there once so the portal tile
+    and the app itself cannot disagree. Every variable keeps its shadcn name, so the
+    whole component library follows without a component changing.
+*/
 :root {
     --background: hsl(0 0% 100%);
     --foreground: hsl(0 0% 3.9%);
