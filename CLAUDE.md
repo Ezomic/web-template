@@ -21,8 +21,12 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   `config/` is intentionally excluded (declarative framework scaffolding). Fix the cause, never add
   baselines, `@phpstan-ignore`, or casts-to-silence.
 - **100% test coverage.** `composer test:coverage` runs `pest --coverage --min=100` (scoped to
-  `app/` via `phpunit.xml`). New code ships with the tests that cover it. Coverage runs in CI
-  (xdebug); Herd's local PHP has no coverage driver.
+  `app/` via `phpunit.xml`). New code ships with the tests that cover it. CI runs it with xdebug.
+  Herd ships no coverage driver, so locally it needs PCOV, and without one the command fails with
+  "Code coverage driver not available" instead of a percentage. `pecl install pcov` will not work
+  (Herd's PHP has no `phpize` or headers): build PCOV against Homebrew's `php@8.4` headers, which
+  are ABI-compatible, then load it with a `pcov.ini` in Herd's ini scan dir
+  (`~/Library/Application Support/Herd/config/php/84/`).
 - **Architecture tests** (`tests/Unit/ArchTest.php`) enforce the house conventions mechanically:
   strict types everywhere, no `dd`/`dump`/`ray`, no Livewire/Filament, controllers extending the
   base controller, `App\Actions` expose a `handle()` method, models extend Eloquent, form requests
