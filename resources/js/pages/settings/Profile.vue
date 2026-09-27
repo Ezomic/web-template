@@ -25,6 +25,9 @@ defineOptions({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const workflowEnabled = computed<boolean>(
+    () => page.props.workflow?.enabled ?? false,
+);
 </script>
 
 <template>
@@ -66,10 +69,14 @@ const user = computed(() => page.props.auth.user);
                     class="mt-1 block w-full"
                     name="email"
                     :default-value="user.email"
+                    :readonly="workflowEnabled"
                     required
                     autocomplete="username"
                     placeholder="Email address"
                 />
+                <p v-if="workflowEnabled" class="text-sm text-muted-foreground">
+                    Your email address is managed by Thijssensoftware ID.
+                </p>
                 <InputError class="mt-2" :message="errors.email" />
             </div>
 
