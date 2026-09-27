@@ -23,6 +23,12 @@ use Symfony\Component\HttpFoundation\Response;
  * generates its route helpers from the registered routes. Removing the routes
  * removes the exports, and the auth pages that still import them in standalone
  * mode then fail to build. See WEB-23.
+ *
+ * The same goes for every other credential the app could hold for a user:
+ * passkeys (their sign-in is a guest route of its own), two-factor, changing a
+ * password, and the Security page that manages them. Once confirming through
+ * ID unlocked the pages behind RequirePassword (WEB-28), a passkey enrolled
+ * there would have been a way in that never touches ID.
  */
 final class BlockLocalCredentials
 {
@@ -38,6 +44,11 @@ final class BlockLocalCredentials
         // Confirmation goes through ID instead (WEB-28), so a local password set before
         // the switch to workflow mode cannot stand in for it.
         'password.confirm.store',
+        'passkey.*',
+        'two-factor.*',
+        'security.edit',
+        'user-password.update',
+        'well-known.passkeys',
     ];
 
     /**

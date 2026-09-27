@@ -50,9 +50,11 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   monitor (200 healthy, 503 when the DB is unreachable). Laravel's built-in `/up` is also present.
 - **API tokens:** Sanctum personal access tokens, managed at `settings/api-tokens` (list, create
   with a one-time reveal, revoke). The pages sit behind `RequirePassword`, since a token is a
-  full-access credential. In workflow mode users have no password, so a sign-in through ID
-  within `auth.password_timeout` counts as the confirmation and an older one sends the user
-  back through ID (`App\Actions\Workflow\ConfirmIdentityThroughId`, WEB-28). `routes/api.php` ships exactly one route, `GET /api/user` behind
+  full-access credential. In workflow mode users have no password, so confirming is a round
+  trip through ID that must sign the user in again after it was asked for
+  (`App\Actions\Workflow\ConfirmIdentityThroughId`, WEB-28), and every local credential route
+  (passkeys, two-factor, password change, the Security page) answers 404 there
+  (`BlockLocalCredentials`). `routes/api.php` ships exactly one route, `GET /api/user` behind
   `auth:sanctum`, so the tokens authenticate against something real; an app builds its API out
   from there. When testing the API, do **not** `actingAs()` first: `auth:sanctum` falls back to
   the web guard, so a lingering session authenticates the request and the token is never exercised.
