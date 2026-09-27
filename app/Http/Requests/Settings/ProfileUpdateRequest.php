@@ -23,6 +23,15 @@ final class ProfileUpdateRequest extends FormRequest
         $user = $this->user();
         abort_unless($user instanceof User, 403);
 
-        return $this->profileRules($user->id);
+        $rules = $this->profileRules($user->id);
+
+        // In workflow mode ID owns the email and id-client falls back to it when linking a
+        // sign-in to a user, so changing it here would let another ID account sign in as
+        // this user. Leaving it out of the rules keeps it out of validated() (WEB-30).
+        if ((bool) config('workflow.enabled')) {
+            unset($rules['email']);
+        }
+
+        return $rules;
     }
 }

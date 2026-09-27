@@ -63,6 +63,34 @@ class ProfileUpdateTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
+    /**
+     * id-client links an ID sign-in to a user by email when the idp id does not match, so
+     * an email changed from a hijacked session would let another ID account take this user
+     * over. ID owns the email in workflow mode (WEB-30).
+     */
+    public function test_workflow_mode_keeps_the_email_that_id_owns()
+    {
+        config(['workflow.enabled' => true]);
+        $user = User::factory()->create(['email' => 'owner@example.com']);
+
+        $response = $this
+            ->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => 'Renamed',
+                'email' => 'attacker@example.com',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('profile.edit'));
+
+        $user->refresh();
+
+        $this->assertSame('Renamed', $user->name);
+        $this->assertSame('owner@example.com', $user->email);
+        $this->assertNotNull($user->email_verified_at);
+    }
+
     public function test_user_can_delete_their_account()
     {
         $user = User::factory()->create();
