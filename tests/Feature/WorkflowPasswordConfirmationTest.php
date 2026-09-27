@@ -91,3 +91,19 @@ it('does not count a sign-in from before the confirmation was asked for', functi
         ->assertRedirect(route('sso.redirect'))
         ->assertSessionMissing('auth.password_confirmed_at');
 });
+
+/**
+ * A signed-out user who deep-links to the token page signs in, lands back on it and is
+ * asked to confirm all within one second. Timestamps alone cannot tell that sign-in from
+ * a fresh one, so the sign-in current at the request is remembered and never counts.
+ */
+it('does not count the sign-in current at the request, even in the same second', function () {
+    ssoUser(signedInSecondsAgo: 0);
+
+    get(route('password.confirm'))->assertRedirect(route('sso.redirect'));
+    travel(1)->hour();
+
+    get(route('password.confirm'))
+        ->assertRedirect(route('sso.redirect'))
+        ->assertSessionMissing('auth.password_confirmed_at');
+});

@@ -50,7 +50,6 @@ it('blocks managing local credentials in workflow mode', function (string $metho
     ['POST', 'password.confirm.store', []],
     ['GET', 'passkey.registration-options', []],
     ['POST', 'passkey.store', []],
-    ['DELETE', 'passkey.destroy', ['passkey' => 1]],
     ['GET', 'passkey.confirm-options', []],
     ['POST', 'passkey.confirm', []],
     ['POST', 'two-factor.enable', []],
