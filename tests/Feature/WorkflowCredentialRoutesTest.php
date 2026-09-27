@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+
+use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
 
@@ -24,6 +27,19 @@ it('blocks the local credential routes in workflow mode', function (string $meth
     ['post', 'password.update'],
     ['post', 'login.store'],
 ]);
+
+/**
+ * Password confirmation only exists for a signed-in user, so it is asked as one. In
+ * workflow mode it goes through ID instead (WEB-28), and a password set before the switch
+ * must not stand in for that.
+ */
+it('blocks confirming with a local password in workflow mode', function () {
+    config(['workflow.enabled' => true]);
+
+    actingAs(User::factory()->create())
+        ->post(route('password.confirm.store'), ['password' => 'password'])
+        ->assertNotFound();
+});
 
 it('leaves the local credential routes alone for a standalone app', function () {
     config(['workflow.enabled' => false]);
