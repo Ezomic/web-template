@@ -6,8 +6,10 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Contracts\Factory as Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
+use Symfony\Component\HttpFoundation\Response;
 use Thijssensoftware\IdClient\Http\Middleware\EnsureSsoSessionIsActive;
 
 use function Pest\Laravel\actingAs;
@@ -37,14 +39,17 @@ function ssoUser(int $signedInSecondsAgo = 60): User
     return $user;
 }
 
-function idSignsInAgain(): void
+/**
+ * @return TestResponse<Response>
+ */
+function idSignsInAgain(): TestResponse
 {
     $idUser = (new SocialiteUser)->map(['id' => 'idp-1', 'email' => 'sso@example.test', 'name' => 'SSO User']);
     $idUser->setToken('id-access-token');
 
     mock(Socialite::class)->shouldReceive('driver->user')->andReturn($idUser);
 
-    get(route('sso.callback'))->assertRedirect();
+    return get(route('sso.callback'))->assertRedirect();
 }
 
 it('asks a user without a password to confirm before the token pages', function () {
@@ -155,7 +160,7 @@ it('confirms once a remembered browser has been back through ID', function () {
     Auth::forgetGuards();
     withCookie(Auth::guard()->getRecallerName(), $recaller)
         ->get(route('sso.callback'))
-        ->assertRedirect(route('api-tokens.index'));
+        ->assertRedirect(route('password.confirm'));
 
     Auth::forgetGuards();
     get(route('api-tokens.index'))->assertRedirect(route('password.confirm'));
@@ -166,3 +171,69 @@ it('confirms once a remembered browser has been back through ID', function () {
     Auth::forgetGuards();
     get(route('api-tokens.index'))->assertOk();
 });
+
+/**
+ * id-client's callback lands on the intended URL, which used to be the token page, where
+ * RequirePassword sent the user to the confirmation once more before it completed. The
+ * trip through ID now comes back to the confirmation itself, which completes and hands
+ * over to the page that asked. WEB-36.
+ */
+it('comes back through the confirmation, which lands on the token page confirmed', function () {
+    ssoUser();
+
+    get(route('api-tokens.index'))->assertRedirect(route('password.confirm'));
+    get(route('password.confirm'))->assertRedirect(route('sso.redirect'));
+
+    travel(5)->seconds();
+    idSignsInAgain()->assertRedirect(route('password.confirm'));
+
+    get(route('password.confirm'))
+        ->assertRedirect(route('api-tokens.index'))
+        ->assertSessionHas('auth.password_confirmed_at');
+    get(route('api-tokens.index'))->assertOk();
+});
+
+/**
+ * Leaving ID halfway and opening the confirmation again must not make the confirmation
+ * its own destination, or completing it would start another trip through ID.
+ */
+it('still returns to the page that asked after a trip through ID was abandoned', function () {
+    ssoUser();
+
+    get(route('api-tokens.index'))->assertRedirect(route('password.confirm'));
+    get(route('password.confirm'))->assertRedirect(route('sso.redirect'));
+    get(route('password.confirm'))->assertRedirect(route('sso.redirect'));
+
+    travel(5)->seconds();
+    idSignsInAgain()->assertRedirect(route('password.confirm'));
+
+    get(route('password.confirm'))->assertRedirect(route('api-tokens.index'));
+});
+
+/**
+ * A Delete or a token form is not a page to return to, so RequirePassword takes the
+ * Referer instead. That header is the client's to write, and it only counts when it
+ * names a page of this app that answers a GET; anything else falls back to the
+ * dashboard rather than becoming an open redirect.
+ */
+it('falls back to the dashboard when the page that asked is not one of ours', function (string $referer) {
+    ssoUser();
+
+    $this->from($referer)->post(route('api-tokens.store'), ['name' => 'Laptop CLI'])
+        ->assertRedirect(route('password.confirm'));
+    get(route('password.confirm'))->assertRedirect(route('sso.redirect'));
+
+    travel(5)->seconds();
+    idSignsInAgain()->assertRedirect(route('password.confirm'));
+
+    get(route('password.confirm'))
+        ->assertRedirect(route('dashboard'))
+        ->assertSessionHas('auth.password_confirmed_at');
+})->with([
+    'another origin' => fn () => 'https://evil.example/settings/api-tokens',
+    'a lookalike host' => fn () => url('/').'.evil.example/settings/api-tokens',
+    'a host hidden behind userinfo' => fn () => url('/').'@evil.example/settings/api-tokens',
+    'a path this app takes no GET on' => fn () => url('settings/password'),
+    'a path this app does not have' => fn () => url('no-such-page'),
+    'the confirmation itself' => fn () => route('password.confirm'),
+]);
