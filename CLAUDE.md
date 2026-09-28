@@ -64,6 +64,11 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   `auth:sanctum`, so the tokens authenticate against something real; an app builds its API out
   from there. When testing the API, do **not** `actingAs()` first: `auth:sanctum` falls back to
   the web guard, so a lingering session authenticates the request and the token is never exercised.
+  A token expires after `CreateApiToken::LIFETIME_DAYS` (90), with `sanctum.expiration` as the
+  backstop for one minted any other way, and its plaintext starts with a prefix derived from
+  `APP_NAME` so secret scanners can spot a leaked one. `RevokeApiTokensOnLostAccess` deletes a
+  user's tokens when ID sends `access.revoked`, but not on a plain logout, which ID sends per
+  session. Every API route goes through the `api` limiter, 60 a minute per token (WEB-32).
 - **Reporting ships off, and there are two of them.** `thijssensoftware/flare-client` catches what
   the runtime noticed; `thijssensoftware/snag-client` lets a person report what it did not, from
   inside the page. Both self-register and both default to off, because a fresh clone has no project

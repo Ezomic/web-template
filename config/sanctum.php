@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Actions\ApiTokens\CreateApiToken;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Http\Middleware\AuthenticateSession;
 use Laravel\Sanctum\Sanctum;
 
@@ -52,7 +54,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    // A backstop for any token minted without CreateApiToken's expiry, which is what bounds
+    // a token that outlives a revoked grant until ID-89 lands.
+    'expiration' => CreateApiToken::LIFETIME_DAYS * 24 * 60,
 
     /*
     |--------------------------------------------------------------------------
@@ -67,7 +71,9 @@ return [
     |
     */
 
-    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
+    // Derived from the app's name, as the session cookie's is, so a clone renamed with
+    // app:rename issues tokens that say whose they are without anyone editing this.
+    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', Str::slug((string) env('APP_NAME', 'laravel'), '_').'_'),
 
     /*
     |--------------------------------------------------------------------------

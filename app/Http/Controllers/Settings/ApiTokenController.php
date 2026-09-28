@@ -31,6 +31,8 @@ final class ApiTokenController extends Controller
                     'name' => $token->name,
                     'created_at_diff' => $token->created_at?->diffForHumans(),
                     'last_used_at_diff' => $token->last_used_at?->diffForHumans(),
+                    'expires_at_diff' => $token->expires_at?->diffForHumans(),
+                    'expired' => $token->expires_at?->isPast() ?? false,
                 ])
                 ->values()
                 ->all(),
