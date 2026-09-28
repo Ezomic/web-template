@@ -2,17 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Testing\TestResponse;
-use Laravel\Socialite\Contracts\Factory as Socialite;
-use Laravel\Socialite\Two\User as SocialiteUser;
 use Symfony\Component\HttpFoundation\Response;
 
 use function Pest\Laravel\assertAuthenticatedAs;
 use function Pest\Laravel\assertGuest;
 use function Pest\Laravel\get;
-use function Pest\Laravel\mock;
 
 /**
  * id-client signs every workflow-mode user in with remember: true, and the user it
@@ -25,36 +21,6 @@ use function Pest\Laravel\mock;
 beforeEach(function () {
     config(['workflow.enabled' => true]);
 });
-
-/**
- * @return array{User, string}
- */
-function signInThroughIdRemembered(): array
-{
-    $idUser = (new SocialiteUser)->map(['id' => 'idp-1', 'email' => 'sso@example.test', 'name' => 'SSO User']);
-    $idUser->setToken('id-access-token');
-
-    mock(Socialite::class)->shouldReceive('driver->user')->andReturn($idUser);
-
-    $recaller = get(route('sso.callback'))->assertRedirect()->getCookie(Auth::guard()->getRecallerName());
-
-    expect($recaller)->not->toBeNull();
-
-    return [User::query()->where('idp_id', 'idp-1')->sole(), (string) $recaller?->getValue()];
-}
-
-/**
- * A browser whose session has expired, so the remember cookie is all it still carries.
- *
- * @return TestResponse<Response>
- */
-function returnWithOnlyTheRememberCookie(string $recaller): TestResponse
-{
-    test()->flushSession();
-    Auth::forgetGuards();
-
-    return test()->withCookie(Auth::guard()->getRecallerName(), $recaller)->get(route('dashboard'));
-}
 
 /**
  * The next request from a session that is still live. A fresh guard, as on a real
