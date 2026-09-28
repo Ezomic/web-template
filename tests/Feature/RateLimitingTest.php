@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Session\ArraySessionHandler;
@@ -44,4 +45,26 @@ it('falls back to the session id when no passkey credential is present', functio
 
     expect($limiter(requestWithSession()))
         ->toBeInstanceOf(Limit::class);
+});
+
+/**
+ * auth:sanctum falls back to the web guard, so a browser session reaches the API with no
+ * token of its own, and an app may add a route that needs no sign-in at all. Neither may
+ * share one bucket with every other caller.
+ */
+it('throttles the API per token, else per user, else per address', function () {
+    $limiter = RateLimiter::limiter('api');
+    $user = User::factory()->create();
+    $token = $user->createToken('Script')->accessToken;
+    $request = Request::create('/api/user', 'GET', server: ['REMOTE_ADDR' => '203.0.113.9']);
+
+    expect($limiter($request)->key)->toBe('ip:203.0.113.9');
+
+    $request->setUserResolver(fn (): User => $user);
+
+    expect($limiter($request)->key)->toBe("user:{$user->id}");
+
+    $user->withAccessToken($token);
+
+    expect($limiter($request)->key)->toBe("token:{$token->id}");
 });

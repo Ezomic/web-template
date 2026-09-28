@@ -53,7 +53,9 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
 - **`$request->user()` is nullable at level 10.** On `auth`-protected routes, narrow it with
   `abort_unless($user instanceof User, 403)` before use (see the settings controllers).
 - **Health check:** `GET /health` returns `{ status, app, version, database }` for the `status`
-  monitor (200 healthy, 503 when the DB is unreachable). Laravel's built-in `/up` is also present.
+  monitor (200 healthy, 503 when the DB is unreachable). Laravel's built-in `/up` is what
+  app-deploy checks after a release, so `CheckDatabaseOnHealthCheck` makes it answer 500 when the
+  DB is unreachable too, and a release that cannot reach it is switched back (WEB-34).
 - **API tokens:** Sanctum personal access tokens, managed at `settings/api-tokens` (list, create
   with a one-time reveal, revoke). The pages sit behind `RequirePassword`, since a token is a
   full-access credential. In workflow mode users have no password, so confirming is a round
@@ -64,6 +66,11 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   `auth:sanctum`, so the tokens authenticate against something real; an app builds its API out
   from there. When testing the API, do **not** `actingAs()` first: `auth:sanctum` falls back to
   the web guard, so a lingering session authenticates the request and the token is never exercised.
+  A token expires after `CreateApiToken::LIFETIME_DAYS` (90), with `sanctum.expiration` as the
+  backstop for one minted any other way, and its plaintext starts with a prefix derived from
+  `APP_NAME` so secret scanners can spot a leaked one. `RevokeApiTokensOnLostAccess` deletes a
+  user's tokens when ID sends `access.revoked`, but not on a plain logout, which ID sends per
+  session. Every API route goes through the `api` limiter, 60 a minute per token (WEB-32).
 - **Reporting ships off, and there are two of them.** `thijssensoftware/flare-client` catches what
   the runtime noticed; `thijssensoftware/snag-client` lets a person report what it did not, from
   inside the page. Both self-register and both default to off, because a fresh clone has no project
@@ -78,7 +85,8 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   To turn snag on: register the application in snag, then set `SNAG_ENABLED=true`, `SNAG_URL`,
   `SNAG_KEY`, `SNAG_SECRET` and `SNAG_PSEUDONYM_SALT`. The last two are two secrets deliberately:
   snag holds the ingest secret and must never hold the salt, which is what keeps a reporter's
-  pseudonym from being reversible by snag itself.
+  pseudonym from being reversible by snag itself. `@snag` already sits in `app.blade.php` and
+  prints nothing until then, or for a signed-out visitor.
 
   **Constraints on the house packages are `^0.3`, not `^0.1`, and that matters.** Composer's caret
   is restrictive to the minor on a 0.x version, so `^0.1.0` resolves to `>=0.1.0 <0.2.0` and can

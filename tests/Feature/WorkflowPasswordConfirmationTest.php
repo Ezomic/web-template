@@ -5,14 +5,19 @@ declare(strict_types=1);
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Contracts\Factory as Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Thijssensoftware\IdClient\Http\Middleware\EnsureSsoSessionIsActive;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertAuthenticated;
+use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\get;
 use function Pest\Laravel\mock;
+use function Pest\Laravel\post;
 use function Pest\Laravel\travel;
+use function Pest\Laravel\withCookie;
 
 /**
  * id-client provisions workflow-mode users with a null password, so the confirmation in
@@ -106,4 +111,58 @@ it('does not count the sign-in current at the request, even in the same second',
     get(route('password.confirm'))
         ->assertRedirect(route('sso.redirect'))
         ->assertSessionMissing('auth.password_confirmed_at');
+});
+
+/**
+ * id-client stamps a session the remember cookie restores as though it had just signed in
+ * through ID. The cookie lasts 400 days and carries no ID session, so a restore must not
+ * stand in for the round trip, neither on the request that restores nor later in the
+ * session it restored. THI-368.
+ */
+it('does not take a remember-me restore for a sign-in through ID', function () {
+    config(['workflow.enabled' => true]);
+    [, $recaller] = signInThroughIdRemembered();
+    travel(2)->days();
+
+    returnWithOnlyTheRememberCookie($recaller, route('password.confirm'))->assertRedirect(route('sso.redirect'));
+    assertAuthenticated();
+
+    travel(5)->seconds();
+    Auth::forgetGuards();
+
+    get(route('password.confirm'))
+        ->assertRedirect(route('sso.redirect'))
+        ->assertSessionMissing('auth.password_confirmed_at');
+    post(route('api-tokens.store'), ['name' => 'Laptop CLI'])->assertRedirect(route('password.confirm'));
+    assertDatabaseCount('personal_access_tokens', 0);
+});
+
+/**
+ * The round trip a remembered browser makes: restored on the token page, sent through ID,
+ * and back on the callback in the restored session with the remember cookie still attached.
+ * Each request gets a fresh guard, as a real one does.
+ */
+it('confirms once a remembered browser has been back through ID', function () {
+    config(['workflow.enabled' => true]);
+    [, $recaller] = signInThroughIdRemembered();
+    travel(2)->days();
+
+    returnWithOnlyTheRememberCookie($recaller, route('api-tokens.index'))->assertRedirect(route('password.confirm'));
+    Auth::forgetGuards();
+    get(route('password.confirm'))->assertRedirect(route('sso.redirect'));
+
+    travel(5)->seconds();
+    Auth::forgetGuards();
+    withCookie(Auth::guard()->getRecallerName(), $recaller)
+        ->get(route('sso.callback'))
+        ->assertRedirect(route('api-tokens.index'));
+
+    Auth::forgetGuards();
+    get(route('api-tokens.index'))->assertRedirect(route('password.confirm'));
+    Auth::forgetGuards();
+    get(route('password.confirm'))
+        ->assertRedirect(route('api-tokens.index'))
+        ->assertSessionHas('auth.password_confirmed_at');
+    Auth::forgetGuards();
+    get(route('api-tokens.index'))->assertOk();
 });

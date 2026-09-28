@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Settings\ApiTokenController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Middleware\RequirePasswordInWorkflowMode;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,7 +18,11 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Base mode confirms with the current password in the request. A user signed in
+    // through ID has none, so there it takes a fresh trip through ID instead (WEB-31).
+    Route::delete('settings/profile', [ProfileController::class, 'destroy'])
+        ->middleware(RequirePasswordInWorkflowMode::class)
+        ->name('profile.destroy');
 
     Route::get('settings/security', [SecurityController::class, 'edit'])
         ->middleware(RequirePassword::class)
