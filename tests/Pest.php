@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Testing\TestResponse;
+use Laravel\Socialite\Contracts\Factory as Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 use function Pest\Laravel\call;
+use function Pest\Laravel\get;
+use function Pest\Laravel\mock;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,4 +67,37 @@ function signedIdEvent(string $event, User $user): TestResponse
         'CONTENT_TYPE' => 'application/json',
         'HTTP_X_ID_SIGNATURE' => hash_hmac('sha256', $body, 'test-logout-secret'),
     ], content: $body);
+}
+
+/**
+ * Signs in through a faked ID and hands back the remember cookie exactly as the browser
+ * received it.
+ *
+ * @return array{User, string}
+ */
+function signInThroughIdRemembered(): array
+{
+    $idUser = (new SocialiteUser)->map(['id' => 'idp-1', 'email' => 'sso@example.test', 'name' => 'SSO User']);
+    $idUser->setToken('id-access-token');
+
+    mock(Socialite::class)->shouldReceive('driver->user')->andReturn($idUser);
+
+    $recaller = get(route('sso.callback'))->assertRedirect()->getCookie(Auth::guard()->getRecallerName());
+
+    expect($recaller)->not->toBeNull();
+
+    return [User::query()->where('idp_id', 'idp-1')->sole(), (string) $recaller?->getValue()];
+}
+
+/**
+ * A browser whose session has expired, so the remember cookie is all it still carries.
+ *
+ * @return TestResponse<Response>
+ */
+function returnWithOnlyTheRememberCookie(string $recaller, ?string $url = null): TestResponse
+{
+    test()->flushSession();
+    Auth::forgetGuards();
+
+    return test()->withCookie(Auth::guard()->getRecallerName(), $recaller)->get($url ?? route('dashboard'));
 }
