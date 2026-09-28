@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Actions\ApiTokens\CreateApiToken;
 use App\Models\User;
 use Illuminate\Foundation\Auth\User as FrameworkUser;
+use Illuminate\Support\Facades\Exceptions;
 
 /**
  * id-client only ends the web session when ID revokes a user's access to the app, so
@@ -48,11 +49,19 @@ it('keeps the tokens on a plain ID logout', function () {
     $this->withToken($plain)->getJson('/api/user')->assertOk();
 });
 
+/**
+ * A 500 alone proves nothing: without the guard, calling tokens() on the framework user
+ * throws a BadMethodCallException, which is a 500 too and even a LogicException. So the
+ * test pins the listener's own exception by exact class and message. WEB-37.
+ */
 it('fails the delivery, so ID retries it, when id-client is not pointed at the app user model', function () {
+    Exceptions::fake();
     [$user] = ssoUserWithToken('idp-1');
     config(['id-client.user_model' => FrameworkUser::class]);
 
     signedIdEvent('access.revoked', $user)->assertServerError();
 
+    Exceptions::assertReportedCount(1);
+    Exceptions::assertReported(fn (LogicException $e): bool => $e->getMessage() === 'id-client.user_model is not '.User::class.'.');
     expect($user->tokens()->count())->toBe(1);
 });
