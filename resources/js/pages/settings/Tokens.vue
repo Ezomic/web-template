@@ -123,6 +123,15 @@ function revoke(id: number): void {
                                 ? `last used ${token.last_used_at_diff}`
                                 : 'never used'
                         }}
+                        <template v-if="token.expires_at_diff">
+                            &middot;
+                            <span
+                                :class="{ 'text-destructive': token.expired }"
+                            >
+                                {{ token.expired ? 'expired' : 'expires' }}
+                                {{ token.expires_at_diff }}
+                            </span>
+                        </template>
                     </p>
                 </div>
                 <Button

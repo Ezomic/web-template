@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Actions\ApiTokens\CreateApiToken;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -157,4 +159,84 @@ it('rejects the API call once the token is revoked', function () {
 
 it('rejects the API without a token at all', function () {
     $this->getJson('/api/user')->assertUnauthorized();
+});
+
+/**
+ * ID does not yet send access.revoked for every way a user can lose access (ID-89), so
+ * an app cannot count on hearing about it, and expiry is what bounds how long a token
+ * can outlive a revoked grant. WEB-32.
+ */
+it('expires a token 90 days after it is minted', function () {
+    $this->freezeSecond();
+    $user = tokenUser();
+
+    $this->post('/settings/api-tokens', ['name' => 'Laptop CLI'])->assertRedirect('/settings/api-tokens');
+
+    expect($user->tokens()->sole()->expires_at?->getTimestamp())->toBe(now()->addDays(90)->getTimestamp());
+});
+
+it('refuses a token once it has expired', function () {
+    $plain = app(CreateApiToken::class)->handle(User::factory()->create(), 'Laptop CLI');
+
+    $this->travel(90)->days();
+    $this->travel(-1)->minutes();
+    $this->withToken($plain)->getJson('/api/user')->assertOk();
+
+    $this->app['auth']->forgetGuards();
+    $this->travel(2)->minutes();
+    $this->withToken($plain)->getJson('/api/user')->assertUnauthorized();
+});
+
+it('refuses a token minted without an expiry once it is 90 days old', function () {
+    $plain = User::factory()->create()->createToken('Direct')->plainTextToken;
+
+    $this->travel(89)->days();
+    $this->withToken($plain)->getJson('/api/user')->assertOk();
+
+    $this->app['auth']->forgetGuards();
+    $this->travel(2)->days();
+    $this->withToken($plain)->getJson('/api/user')->assertUnauthorized();
+});
+
+it('shows when each token expires, and that it has', function () {
+    $this->freezeSecond();
+    $user = tokenUser();
+    app(CreateApiToken::class)->handle($user, 'Old');
+    $this->travel(30)->days();
+    app(CreateApiToken::class)->handle($user, 'New');
+    $this->travel(61)->days();
+    session()->put('auth.password_confirmed_at', now()->getTimestamp());
+
+    $this->get('/settings/api-tokens')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('tokens.0.name', 'New')
+            ->where('tokens.0.expires_at_diff', '4 weeks from now')
+            ->where('tokens.0.expired', false)
+            ->where('tokens.1.name', 'Old')
+            ->where('tokens.1.expires_at_diff', '1 day ago')
+            ->where('tokens.1.expired', true));
+});
+
+// Secret scanners find a leaked token by its prefix, and the app's name tells whose it is.
+it('prefixes the plaintext with the app name', function () {
+    $plain = app(CreateApiToken::class)->handle(User::factory()->create(), 'Laptop CLI');
+    [, $secret] = explode('|', $plain, 2);
+
+    expect(config('sanctum.token_prefix'))->toBe(Str::slug((string) config('app.name'), '_').'_')
+        ->and($secret)->toStartWith((string) config('sanctum.token_prefix'));
+});
+
+it('throttles each token on its own', function () {
+    $user = User::factory()->create();
+    $script = $user->createToken('Script')->plainTextToken;
+    $laptop = $user->createToken('Laptop CLI')->plainTextToken;
+
+    foreach (range(1, 60) as $ignored) {
+        $this->withToken($script)->getJson('/api/user')->assertOk();
+    }
+
+    $this->withToken($script)->getJson('/api/user')->assertTooManyRequests();
+
+    $this->app['auth']->forgetGuards();
+    $this->withToken($laptop)->getJson('/api/user')->assertOk();
 });
