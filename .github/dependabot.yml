@@ -16,6 +16,10 @@ updates:
   # a migration, and burying it in a group of twenty routine bumps is how it
   # gets merged without anyone reading the upgrade guide.
   - package-ecosystem: "composer"
+    # Resolves on config.platform.php from composer.json. Without it Dependabot
+    # took the floor of require.php, PHP 8.4.0, and every run failed on the
+    # locked Symfony 8.1, which needs 8.4.1, while still reporting success
+    # (WEB-33). Raise the platform when a locked package needs a newer patch.
     directory: "/"
     schedule:
       interval: "weekly"
