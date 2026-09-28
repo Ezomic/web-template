@@ -23,7 +23,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $name
  * @property string $email
  * @property Carbon|null $email_verified_at
- * @property string $password
+ * @property string|null $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -44,6 +44,17 @@ class User extends Authenticatable implements PasskeyUser
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class);
+    }
+
+    /**
+     * Since 13.32 Laravel refuses a remember-me cookie when this is not a string, and a
+     * user provisioned through ID has no password, so the cookie every sign-in through ID
+     * sets was never honoured. An empty string never passes a password check, because the
+     * hasher rejects an empty hash. THI-368.
+     */
+    public function getAuthPassword(): string
+    {
+        return $this->password ?? '';
     }
 
     /**
