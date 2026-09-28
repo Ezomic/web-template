@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7659091e41bc8fa8f0055faef76b5f57",
+    "content-hash": "924cb18a4dcbff1caa5dcc196083ecfa",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -7656,16 +7656,16 @@
         },
         {
             "name": "thijssensoftware/id-client",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/Ezomic/id-client.git",
-                "reference": "6af32f46628ef973436da73ba6f7d1c84a017beb"
+                "url": "git@github.com:Ezomic/id-client.git",
+                "reference": "fc6dc9a8fa5fc2882b626f8105436d5bce3c41fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Ezomic/id-client/zipball/6af32f46628ef973436da73ba6f7d1c84a017beb",
-                "reference": "6af32f46628ef973436da73ba6f7d1c84a017beb",
+                "url": "https://api.github.com/repos/Ezomic/id-client/zipball/fc6dc9a8fa5fc2882b626f8105436d5bce3c41fb",
+                "reference": "fc6dc9a8fa5fc2882b626f8105436d5bce3c41fb",
                 "shasum": ""
             },
             "require": {
@@ -7708,11 +7708,7 @@
                 "proprietary"
             ],
             "description": "Client for signing in workflow apps against Thijssensoftware ID (SSO).",
-            "support": {
-                "source": "https://github.com/Ezomic/id-client/tree/v0.3.0",
-                "issues": "https://github.com/Ezomic/id-client/issues"
-            },
-            "time": "2026-08-13T02:58:39+00:00"
+            "time": "2026-09-27T18:53:43+00:00"
         },
         {
             "name": "thijssensoftware/request-id",
