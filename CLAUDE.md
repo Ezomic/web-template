@@ -20,9 +20,15 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
 - **PHPStan (Larastan) level 10.** Analyses `app/`, `bootstrap/app.php`, `database/`, `routes/`.
   `config/` is intentionally excluded (declarative framework scaffolding). Fix the cause, never add
   baselines, `@phpstan-ignore`, or casts-to-silence.
-- **100% test coverage.** `composer test:coverage` runs `pest --coverage --min=100` (scoped to
-  `app/` via `phpunit.xml`). New code ships with the tests that cover it. Coverage runs in CI
-  (xdebug); Herd's local PHP has no coverage driver.
+- **100% test coverage.** `composer test:coverage` runs `php artisan test --coverage --min=100`
+  (scoped to `app/` via `phpunit.xml`). New code ships with the tests that cover it. CI runs it with
+  xdebug. Herd bundles Xdebug but does not load it, and has no PCOV, so out of the box the command
+  fails with "Code coverage driver not available" instead of a percentage. Locally we use PCOV.
+  `pecl install pcov` will not work (Herd's PHP has no `phpize` or headers): build PCOV against
+  Homebrew's `php@8.4` headers, which are ABI-compatible, then load it with a `pcov.ini` in Herd's
+  ini scan dir (`~/Library/Application Support/Herd/config/php/84/`). Herd's PHP only reads that
+  dir when `HERD_PHP_84_INI_SCAN_DIR` is exported (Herd adds it to `~/.zshrc`), so shells that skip
+  `~/.zshrc` run without PCOV.
 - **Architecture tests** (`tests/Unit/ArchTest.php`) enforce the house conventions mechanically:
   strict types everywhere, no `dd`/`dump`/`ray`, no Livewire/Filament, controllers extending the
   base controller, `App\Actions` expose a `handle()` method, models extend Eloquent, form requests
