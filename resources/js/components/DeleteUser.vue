@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Form } from '@inertiajs/vue3';
-import { useTemplateRef } from 'vue';
+import { Form, usePage } from '@inertiajs/vue3';
+import { computed, useTemplateRef } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -19,6 +19,12 @@ import {
 import { Label } from '@/components/ui/label';
 
 const passwordInput = useTemplateRef('passwordInput');
+
+// A user signed in through ID has no password; the route sends them through ID instead.
+const page = usePage();
+const workflowEnabled = computed<boolean>(
+    () => page.props.workflow?.enabled ?? false,
+);
 </script>
 
 <template>
@@ -59,7 +65,14 @@ const passwordInput = useTemplateRef('passwordInput');
                                 >Are you sure you want to delete your
                                 account?</DialogTitle
                             >
-                            <DialogDescription>
+                            <DialogDescription v-if="workflowEnabled">
+                                Once your account is deleted, all of its
+                                resources and data will also be permanently
+                                deleted. To confirm it is you, Thijssensoftware
+                                ID may ask you to sign in again first and then
+                                bring you back here to delete it.
+                            </DialogDescription>
+                            <DialogDescription v-else>
                                 Once your account is deleted, all of its
                                 resources and data will also be permanently
                                 deleted. Please enter your password to confirm
@@ -68,7 +81,7 @@ const passwordInput = useTemplateRef('passwordInput');
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div class="grid gap-2">
+                        <div v-if="!workflowEnabled" class="grid gap-2">
                             <Label for="password" class="sr-only"
                                 >Password</Label
                             >
