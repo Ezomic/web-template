@@ -133,30 +133,36 @@ it('leaves the env file alone when it already matches', function (): void {
 });
 
 it('defaults to this application when no path is given', function (): void {
-    // No --path, so this targets the real repo. Renaming the template to its
-    // own identity is a no-op, which is the one safe way to reach the
-    // base_path() branch. Snapshotted and restored regardless, so a drifted
-    // local .env cannot be quietly rewritten by running the suite.
+    // No --path means base_path(), so base_path() is pointed at the fixture.
+    // Renaming the real repo to itself is only a no-op inside the template:
+    // a scaffolded clone is no longer the template default, and RenameApp
+    // always writes an http APP_URL over a local .env that may use https. The
+    // real files are still snapshotted, asserted untouched and restored.
+    $realBase = base_path();
     $tracked = ['composer.json', '.env.example', '.env'];
     $before = [];
 
     foreach ($tracked as $file) {
-        if (File::exists(base_path($file))) {
-            $before[$file] = File::get(base_path($file));
+        if (File::exists($realBase.'/'.$file)) {
+            $before[$file] = File::get($realBase.'/'.$file);
         }
     }
 
     try {
-        $this->artisan('app:rename', ['slug' => 'web-template', 'name' => 'Web Template'])
-            ->expectsOutputToContain('Already named "Web Template". Nothing to change.')
-            ->assertSuccessful();
+        $this->app->setBasePath($this->fixture);
+
+        $this->artisan('app:rename', ['slug' => 'my-app', 'name' => 'My App'])->assertSuccessful();
+
+        expect(File::get($this->fixture.'/composer.json'))->toContain('"name": "thijssensoftware/my-app"');
 
         foreach ($before as $file => $contents) {
-            expect(File::get(base_path($file)))->toBe($contents);
+            expect(File::get($realBase.'/'.$file))->toBe($contents);
         }
     } finally {
+        $this->app->setBasePath($realBase);
+
         foreach ($before as $file => $contents) {
-            File::put(base_path($file), $contents);
+            File::put($realBase.'/'.$file, $contents);
         }
     }
 });
