@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Form, Head, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Form, Head, setLayoutProps, usePage } from '@inertiajs/vue3';
+import { computed, watchEffect } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -17,7 +17,6 @@ import { redirect as ssoRedirect } from '@/routes/sso';
 defineOptions({
     layout: {
         title: 'Log in to your account',
-        description: 'Enter your email and password below to log in',
     },
 });
 
@@ -30,6 +29,14 @@ const page = usePage();
 const workflowEnabled = computed<boolean>(
     () => page.props.workflow?.enabled ?? false,
 );
+
+watchEffect(() => {
+    setLayoutProps({
+        description: workflowEnabled.value
+            ? 'Sign in with your Thijssensoftware account'
+            : 'Enter your email and password below to log in',
+    });
+});
 </script>
 
 <template>
