@@ -21,6 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Only APP_URL's own name, no subdomains, outside local and tests.
+        // Anchored, because Symfony reads each entry as an unanchored pattern;
+        // a closure, because config is not loaded yet when this runs.
+        $middleware->trustHosts(
+            at: fn (): array => ['^'.preg_quote((string) parse_url(config()->string('app.url'), PHP_URL_HOST)).'$'],
+            subdomains: false,
+        );
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->throttleApi();

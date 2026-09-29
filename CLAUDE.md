@@ -52,6 +52,11 @@ The template runs in one of two modes, switched at runtime by `WORKFLOW_MODE` (`
   declaration; don't hand-write it inconsistently.
 - **`$request->user()` is nullable at level 10.** On `auth`-protected routes, narrow it with
   `abort_unless($user instanceof User, 403)` before use (see the settings controllers).
+- **Only APP_URL's host is served outside `local`.** `bootstrap/app.php` pins Laravel's
+  `trustHosts` to that one name, without subdomains, so a request for any other Host gets a 400
+  before it is routed (WEB-38). Production's `APP_URL` must therefore be the vhost's name exactly,
+  and an app that answers on a second hostname adds it to that list. `local` and the test suite
+  skip the check, so `*.test` is unaffected; `tests/Feature/TrustedHostTest.php` runs as production.
 - **Health check:** `GET /health` returns `{ status, app, version, database }` for the `status`
   monitor (200 healthy, 503 when the DB is unreachable). Laravel's built-in `/up` is what
   app-deploy checks after a release, so `CheckDatabaseOnHealthCheck` makes it answer 500 when the
