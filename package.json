@@ -37,10 +37,10 @@
         "vue-tsc": "^3.3.11"
     },
     "dependencies": {
-        "@inertiajs/vite": "^3.7.1",
-        "@inertiajs/vue3": "^3.7.1",
+        "@inertiajs/vite": "^3.9.0",
+        "@inertiajs/vue3": "^3.9.0",
         "@laravel/passkeys": "^0.4.0",
-        "@lucide/vue": "^1.48.0",
+        "@lucide/vue": "^1.54.0",
         "@vueuse/core": "^12.8.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -54,8 +54,8 @@
         "vue-sonner": "^2.0.0"
     },
     "optionalDependencies": {
-        "@rollup/rollup-linux-x64-gnu": "4.64.0",
-        "@rollup/rollup-win32-x64-msvc": "4.64.0",
+        "@rollup/rollup-linux-x64-gnu": "4.64.3",
+        "@rollup/rollup-win32-x64-msvc": "4.64.3",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "@tailwindcss/oxide-win32-x64-msvc": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.29.1",
